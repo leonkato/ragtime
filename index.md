@@ -15,7 +15,8 @@ The core idea is to retrieve information before generating an answer. Our system
 ```mermaid
 graph TD
     A[User Query] --> B(Embed Query Vector <br> all-mpnet-base-v2);
-    B --> C{Hybrid Search <br> FAISS Vector + BM25 Keyword};
+    A --> C{Hybrid Search <br> FAISS Vector + BM25 Keyword};
+    B --> C;
     D[Knowledge Base <br> FAISS Index + Text Chunks] --> C;
     C --> E[Top-K Document Chunks Retrieved <br> k=5];
     A --> F[Strict Prompt Template];
@@ -24,13 +25,13 @@ graph TD
     G --> H[Display Answer <br> with Sources];
 ```
 
-When a user poses a query, it's first converted into a numerical representation (an embedding) using the all-mpnet-base-v2 sentence transformer model. This embedding captures the semantic meaning of the query. Simultaneously, the system prepares for a keyword search based on the query terms.
+When a user poses a query, it's first converted into a numerical representation (an embedding) using the all-mpnet-base-v2 sentence transformer model. This embedding captures the semantic meaning of the query. Simultaneously, the raw query text itself is used by the keyword search component (BM25) within the hybrid search.
 
 The heart of the retrieval process is a hybrid search strategy managed by LangChain's EnsembleRetriever. This component queries two different underlying retrievers:
 
-A FAISS vector store, which holds embeddings of the documentation chunks and finds chunks semantically similar to the query embedding.
+A FAISS vector store, which uses the query embedding to find chunks semantically similar to the query.
 
-A BM25 retriever, a sophisticated keyword search algorithm, which ranks chunks based on term frequency and inverse document frequency using the raw text of the documentation.
+A BM25 retriever, which uses the raw query text to rank chunks based on keyword relevance (term frequency and inverse document frequency) using the raw text of the documentation.
 
 The results from both retrievers (the top 5 chunks from each, in this implementation) are combined, weighted equally, and deduplicated to produce a final set of contextually relevant document chunks.
 
@@ -43,9 +44,9 @@ The journey from concept to working prototype involved several key steps, implem
 
 1. Gathering and Preparing the Knowledge Base (Build Phase)
 
-The foundation of any RAG system is its knowledge base. We started by collecting the necessary documentation. Using Python's requests library, we programmatically fetched the HTML content from the Transcribe! bundled help files (hosted online) and key pages from the main website.
+The foundation of any RAG system is its knowledge base. We started by collecting the necessary documentation, targeting both the bundled HTML help files (hosted online) and specific key pages from the main Transcribe! website. Using Python's requests library within a simple web crawler logic, we programmatically fetched the HTML content. The crawler began with seed URLs (the base help site URL and additional specified website pages) and followed internal links discovered within the help site domain, using a queue and a set of visited URLs to manage the process up to a defined page limit (max_pages_to_crawl).
 
-Raw HTML isn't ideal for processing, so we employed BeautifulSoup to parse the fetched content. A crucial step here was cleaning the HTML – removing superfluous elements like navigation bars, footers, and scripts that wouldn't provide useful context for answering user queries. Importantly, during this cleaning process, we made sure to preserve hyperlinks (<a> tags) within the main text, converting them into a [link text](URL) format. This allows the final answers to potentially cite specific source pages directly.
+Raw HTML isn't ideal for processing, so we employed BeautifulSoup to parse the fetched content for each page. A crucial step here was cleaning the HTML – removing superfluous elements like navigation bars, footers, and scripts that wouldn't provide useful context for answering user queries. Importantly, during this cleaning process, we made sure to preserve hyperlinks (<a> tags) within the main text, converting them into a [link text](URL) format. This allows the final answers to potentially cite specific source pages directly.
 
 Once cleaned, the text content from each page was too long to be effectively used by embedding models. We used LangChain's RecursiveCharacterTextSplitter to divide the text into smaller, overlapping chunks (specifically, 256 tokens per chunk with a 50-token overlap). This aims to create semantically meaningful units while ensuring context isn't lost at chunk boundaries. Each chunk also retained metadata indicating its original source URL, essential for traceability.
 
@@ -82,6 +83,4 @@ The development process wasn't without hurdles. The most significant practical c
 
 Looking Ahead
 
-While this prototype is effective, several avenues exist for future enhancement. Implementing more sophisticated rate limit handling, such as exponential backoff and retries, would improve robustness and efficiency. Experimenting with different embedding models (like Cohere or Voyage) or LLMs could yield performance improvements or cost benefits. For certain types of queries, particularly those seeking specific commands or shortcuts, extracting this information into a structured format during preprocessing might allow for faster, more direct lookups, potentially bypassing the LLM entirely. Advanced retrieval techniques like query transformation or result re-ranking could also be explored. Finally, packaging the RAG chain into an interactive web UI (using Streamlit or Gradio) would make the tool directly usable for end-users seeking help with Transcribe!. Implementing a formal evaluation framework using tools like Ragas would also allow for more quantitative assessment of the system's performance.
-
-In conclusion, this RAG prototype effectively demonstrates how generative AI, when thoughtfully combined with retrieval techniques and prompt engineering, can transform static technical documentation into a far more accessible and responsive knowledge resource. It serves as a valuable starting point for building truly helpful,
+While this prototype is effective, several avenues exist for future enhancement. Implementing more sophisticated rate limit handling, such as exponential backoff and retries, would improve robustness and efficiency. Experimenting with different embedding models (like Cohere or Voyage) or LLMs could yield performance improvements or cost benefits. For certain types of queries, particularly those seeking specific commands or shortcuts, extracting this information into a structured format during preprocessing might allow
