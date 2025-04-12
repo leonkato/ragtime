@@ -26,9 +26,7 @@ graph TD
     G --> H[Display Answer <br> with Sources];
 ```
 
-![image](https://github.com/user-attachments/assets/ff91bb3c-b47b-4dda-a892-9decd8495ea0)
-
-![image](https://github.com/ragtime/main/)
+![image](https://github.com/ragtime/arch.PNG)
 
 
 
