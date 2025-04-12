@@ -13,20 +13,8 @@ General-purpose chatbots lack the deep, specific knowledge required, while simpl
 The core idea is to retrieve information before generating an answer. Our system follows this RAG pattern, orchestrated primarily using the LangChain framework:
 
 
-```mermaid
-graph TD
-    A[User Query] --> B(Embed Query Vector <br> all-mpnet-base-v2);
-    A --> C{Hybrid Search <br> FAISS Vector + BM25 Keyword};
-    B --> C;
-    D[(Knowledge Base <br> FAISS Index + Text Chunks)] --> C;
-    C --> E[Top-K Document Chunks Retrieved <br> k=5];
-    A --> F[Strict Prompt Template];
-    E --> F;
-    F --> G(LLM: Generate Answer <br> Gemini 1.5 Pro);
-    G --> H[Display Answer <br> with Sources];
-```
 
-![image](https://github.com/ragtime/arch.PNG)
+![image](arch.PNG)
 
 
 
