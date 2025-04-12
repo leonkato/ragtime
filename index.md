@@ -26,6 +26,11 @@ graph TD
     G --> H[Display Answer <br> with Sources];
 ```
 
+![image](https://github.com/user-attachments/assets/ff91bb3c-b47b-4dda-a892-9decd8495ea0)
+
+![image](https://github.com/ragtime/main/)
+
+
 
 
 When a user poses a query, it's first converted into a numerical representation (an embedding) using the `all-mpnet-base-v2` sentence transformer model. This embedding captures the semantic meaning of the query. Simultaneously, the **raw query text** itself is used by the keyword search component (BM25) within the hybrid search.
